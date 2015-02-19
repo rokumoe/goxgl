@@ -10,7 +10,8 @@ enum KEYCODE {
 	KEYCODE_LEFT,
 	KEYCODE_RIGHT,
 	KEYCODE_UP,
-	KEYCODE_DOWN
+	KEYCODE_DOWN,
+	KEYCODE_UNKNOWN
 };
 
 extern void onInit();
@@ -57,6 +58,8 @@ LRESULT WINAPI _wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 			onKeyDown(KEYCODE_DOWN);
 			break;
+		default:
+			onKeyDown(KEYCODE_UNKNOWN);
 		}
 		break;
 	case WM_KEYUP:
@@ -73,6 +76,8 @@ LRESULT WINAPI _wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 			onKeyUp(KEYCODE_DOWN);
 			break;
+		default:
+			onKeyUp(KEYCODE_UNKNOWN);
 		}
 		break;
 	case WM_DESTROY:

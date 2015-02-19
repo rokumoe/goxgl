@@ -123,10 +123,6 @@ func onDraw() {
 }
 
 func onKeyDown(kc int) {
-	if gameOver {
-		start()
-		return
-	}
 	switch kc {
 	case context.KEYCODE_LEFT:
 		me.vx = -50
@@ -136,6 +132,11 @@ func onKeyDown(kc int) {
 		me.vy = 50
 	case context.KEYCODE_DOWN:
 		me.vy = -50
+	default:
+		if gameOver {
+			start()
+			return
+		}
 	}
 }
 
