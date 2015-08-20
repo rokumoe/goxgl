@@ -84,10 +84,12 @@ const (
 )
 
 var (
-	gameOver bool
-	total    float32
-	base     int
-	genbox   float32
+	gameOver    bool
+	total       float32
+	base        int
+	genbox      float32
+	highest     float32
+	highestText string = "HIGHEST 0"
 )
 
 var (
@@ -113,6 +115,7 @@ func onSize(w, h int32) {
 func onDraw() {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	drawText("SCORE "+strconv.FormatFloat(float64(total), 'f', 1, 32), 8, gameHeight-13-8)
+	drawText(highestText, 8, gameHeight-26-8)
 	if !gameOver {
 		gl.EnableClientState(gl.VERTEX_ARRAY)
 		for _, b := range boxes {
@@ -215,7 +218,6 @@ func game() {
 		genbox += delta
 		if genbox > 2.4 {
 			b := int(math.Log2(float64(total)))
-			println(b)
 			for k := 0; k < 4; k++ {
 				c := b + rand.Intn(4)
 				for i := 0; i < c; i++ {
@@ -257,6 +259,10 @@ func game() {
 		boxes = boxes[:len(boxes)-removed]
 		context.RequsetRedraw()
 		if gameOver {
+			if total > highest {
+				highest = total
+				highestText = "HIGHEST " + strconv.FormatFloat(float64(total), 'f', 1, 32)
+			}
 			break
 		}
 		last = current
