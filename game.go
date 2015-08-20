@@ -3,6 +3,7 @@ package main
 import (
 	"goxgl/context"
 	"goxgl/gl"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -78,11 +79,14 @@ func (p *Box) draw() {
 const (
 	gameWidth  = 320
 	gameHeight = 320
+	meVx       = 40
+	meVy       = 40
 )
 
 var (
 	gameOver bool
 	total    float32
+	base     int
 	genbox   float32
 )
 
@@ -99,7 +103,7 @@ func onInit() {
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 	me = &Box{}
 	me.setColor(1, 1, 1)
-	me.setSize(10, 10)
+	me.setSize(6, 6)
 }
 
 func onSize(w, h int32) {
@@ -125,13 +129,13 @@ func onDraw() {
 func onKeyDown(kc int) {
 	switch kc {
 	case context.KEYCODE_LEFT:
-		me.vx = -50
+		me.vx = -meVx
 	case context.KEYCODE_RIGHT:
-		me.vx = 50
+		me.vx = meVx
 	case context.KEYCODE_UP:
-		me.vy = 50
+		me.vy = meVy
 	case context.KEYCODE_DOWN:
-		me.vy = -50
+		me.vy = -meVy
 	default:
 		if gameOver {
 			start()
@@ -197,20 +201,23 @@ func start() {
 	me.setPosition(gameWidth/2-5, gameHeight/2-5)
 	total = 0.0
 	genbox = 0.0
+	base = 0
 	gameOver = false
 	go game()
 }
 
 func game() {
-	fps := time.NewTicker(time.Second / 50.0)
+	fps := time.NewTicker(time.Second / 60.0)
 	last := time.Now()
 	for current := range fps.C {
 		delta := float32(current.Sub(last)) / float32(time.Second)
 		total += delta
 		genbox += delta
-		if genbox > 3.0 {
+		if genbox > 2.4 {
+			b := int(math.Log2(float64(total)))
+			println(b)
 			for k := 0; k < 4; k++ {
-				c := 3 + rand.Intn(4)
+				c := b + rand.Intn(4)
 				for i := 0; i < c; i++ {
 					var x float32
 					var y float32
@@ -221,9 +228,9 @@ func game() {
 						x = float32(rand.Intn(gameWidth))
 						y = float32((k & 1) * gameHeight)
 					}
-					vx := me.x - x
-					vy := me.y - y
-					boxes = append(boxes, putBox(x, y, 10, 10, vx*0.5, vy*0.5))
+					vx := (me.x - x) * (0.4 + float32(rand.Intn(20))/100)
+					vy := (me.y - y) * (0.4 + float32(rand.Intn(20))/100)
+					boxes = append(boxes, putBox(x, y, 4, 4, vx, vy))
 				}
 			}
 			genbox = 0.0
