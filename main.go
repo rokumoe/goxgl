@@ -1,5 +1,7 @@
 package main
 
+//go build -ldflags="-H windowsgui"
+
 import "goxgl/context"
 
 func main() {
@@ -8,7 +10,7 @@ func main() {
 	context.OnDraw = onDraw
 	context.OnKeyDown = onKeyDown
 	context.OnKeyUp = onKeyUp
-	if context.InitDisplay("goxgl", 0, 0, 600, 600) == 0 {
+	if context.InitDisplay("goxgl - v1.0", 0, 0, 600, 600) == 0 {
 		start()
 		context.MainLoop()
 	}
