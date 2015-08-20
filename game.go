@@ -79,17 +79,17 @@ func (p *Box) draw() {
 const (
 	gameWidth  = 320
 	gameHeight = 320
-	meVx       = 40
-	meVy       = 40
+	meVx       = 48
+	meVy       = 48
 )
 
 var (
-	gameOver    bool
-	total       float32
-	base        int
-	genbox      float32
+	over        bool
+	score       float32
+	genboxSlot  float32
 	highest     float32
-	highestText string = "HIGHEST 0"
+	highestText string  = "HIGHEST 0.0"
+	meScale     float32 = 1.0
 )
 
 var (
@@ -114,9 +114,9 @@ func onSize(w, h int32) {
 
 func onDraw() {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
-	drawText("SCORE "+strconv.FormatFloat(float64(total), 'f', 1, 32), 8, gameHeight-13-8)
+	drawText("SCORE "+strconv.FormatFloat(float64(score), 'f', 1, 32), 8, gameHeight-13-8)
 	drawText(highestText, 8, gameHeight-26-8)
-	if !gameOver {
+	if !over {
 		gl.EnableClientState(gl.VERTEX_ARRAY)
 		for _, b := range boxes {
 			b.draw()
@@ -139,8 +139,10 @@ func onKeyDown(kc int) {
 		me.vy = meVy
 	case context.KEYCODE_DOWN:
 		me.vy = -meVy
+	case context.KEYCODE_SHIFT:
+		meScale = 0.5
 	default:
-		if gameOver {
+		if over {
 			start()
 			return
 		}
@@ -165,6 +167,8 @@ func onKeyUp(kc int) {
 		if me.vy < 0 {
 			me.vy = 0
 		}
+	case context.KEYCODE_SHIFT:
+		meScale = 1.0
 	}
 }
 
@@ -202,10 +206,9 @@ func start() {
 		boxes = boxes[:0]
 	}
 	me.setPosition(gameWidth/2-5, gameHeight/2-5)
-	total = 0.0
-	genbox = 0.0
-	base = 0
-	gameOver = false
+	score = 0.0
+	genboxSlot = 0.0
+	over = false
 	go game()
 }
 
@@ -214,10 +217,10 @@ func game() {
 	last := time.Now()
 	for current := range fps.C {
 		delta := float32(current.Sub(last)) / float32(time.Second)
-		total += delta
-		genbox += delta
-		if genbox > 2.4 {
-			b := int(math.Log2(float64(total)))
+		score += delta
+		genboxSlot += delta
+		if genboxSlot > 2.4 {
+			b := int(math.Log2(float64(score)))
 			for k := 0; k < 4; k++ {
 				c := b + rand.Intn(4)
 				for i := 0; i < c; i++ {
@@ -235,17 +238,17 @@ func game() {
 					boxes = append(boxes, putBox(x, y, 4, 4, vx, vy))
 				}
 			}
-			genbox = 0.0
+			genboxSlot = 0.0
 		}
 		for _, b := range boxes {
 			b.update(delta)
 			fixBox(b)
 		}
-		me.update(delta)
+		me.update(delta * meScale)
 		fixMe(me)
 		for _, b := range boxes {
 			if b.intersect(me) {
-				gameOver = true
+				over = true
 				break
 			}
 		}
@@ -258,10 +261,10 @@ func game() {
 		}
 		boxes = boxes[:len(boxes)-removed]
 		context.RequsetRedraw()
-		if gameOver {
-			if total > highest {
-				highest = total
-				highestText = "HIGHEST " + strconv.FormatFloat(float64(total), 'f', 1, 32)
+		if over {
+			if score > highest {
+				highest = score
+				highestText = "HIGHEST " + strconv.FormatFloat(float64(score), 'f', 1, 32)
 			}
 			break
 		}
