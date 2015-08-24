@@ -41,7 +41,11 @@ func (p *Box) setSize(w, h float32) {
 }
 
 func (p *Box) intersect(b *Box) bool {
-	if p.x+p.w < b.x || p.y+p.h < b.y || b.x+b.w < p.x || b.y+b.h < p.y {
+	hw1 := p.w / 2
+	hh1 := p.h / 2
+	hw2 := b.w / 2
+	hh2 := b.h / 2
+	if p.x+hw1 < b.x-hw2 || p.y+hh1 < b.y-hh2 || b.x+hw2 < p.x-hw1 || b.y+hh2 < p.y-hh1 {
 		return false
 	}
 	return true
@@ -57,10 +61,12 @@ func (p *Box) update(d float32) {
 
 func (p *Box) draw() {
 	if p.dirty {
-		l := gl.Float(p.x)
-		t := gl.Float(p.y)
-		r := gl.Float(p.x + p.w)
-		b := gl.Float(p.y + p.h)
+		hw := p.w / 2
+		hh := p.h / 2
+		l := gl.Float(p.x - hw)
+		t := gl.Float(p.y - hh)
+		r := gl.Float(p.x + hw)
+		b := gl.Float(p.y + hh)
 		p.vertex[0] = l
 		p.vertex[1] = t
 		p.vertex[2] = l
@@ -141,6 +147,7 @@ func onKeyDown(kc int) {
 		me.vy = -meVy
 	case context.KEYCODE_SHIFT:
 		meScale = 0.5
+		me.setSize(2, 2)
 	default:
 		if over {
 			start()
@@ -169,33 +176,38 @@ func onKeyUp(kc int) {
 		}
 	case context.KEYCODE_SHIFT:
 		meScale = 1.0
+		me.setSize(6, 6)
 	}
 }
 
 func fixBox(b *Box) {
-	if b.x < -b.w || b.x > gameWidth || b.y < -b.h || b.y > gameHeight {
+	hw := b.w / 2
+	hh := b.h / 2
+	if b.x < -hw || b.x > gameWidth+hw || b.y < -hh || b.y > gameHeight+hh {
 		b.bad = true
 	}
 }
 
 func fixMe(b *Box) {
-	if b.x < 0 {
-		b.x = 0
+	hw := b.w / 2
+	hh := b.h / 2
+	if b.x < hw {
+		b.x = hw
 		b.dirty = true
-	} else if b.x+b.w > gameWidth {
-		b.x = gameWidth - b.w
+	} else if b.x+hw > gameWidth {
+		b.x = gameWidth - hw
 		b.dirty = true
 	}
-	if b.y < 0 {
-		b.y = 0
+	if b.y < hh {
+		b.y = hh
 		b.dirty = true
-	} else if b.y+b.h > gameHeight {
-		b.y = gameHeight - b.w
+	} else if b.y+hh > gameHeight {
+		b.y = gameHeight - hh
 		b.dirty = true
 	}
 }
 
-func putBox(x, y, w, h, vx, vy float32) *Box {
+func newBox(x, y, w, h, vx, vy float32) *Box {
 	b := &Box{dirty: true, x: x, y: y, w: w, h: h, vx: vx, vy: vy}
 	b.setColor(rand.Float32(), rand.Float32(), rand.Float32())
 	return b
@@ -206,6 +218,8 @@ func start() {
 		boxes = boxes[:0]
 	}
 	me.setPosition(gameWidth/2-5, gameHeight/2-5)
+	me.setSize(6, 6)
+	meScale = 1.0
 	score = 0.0
 	genboxSlot = 0.0
 	over = false
@@ -235,7 +249,7 @@ func game() {
 					}
 					vx := (me.x - x) * (0.4 + float32(rand.Intn(20))/100)
 					vy := (me.y - y) * (0.4 + float32(rand.Intn(20))/100)
-					boxes = append(boxes, putBox(x, y, 4, 4, vx, vy))
+					boxes = append(boxes, newBox(x, y, 4, 4, vx, vy))
 				}
 			}
 			genboxSlot = 0.0
